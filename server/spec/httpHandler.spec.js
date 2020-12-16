@@ -3,9 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const expect = require('chai').expect;
 const server = require('./mockServer');
+const messageQueue = require('../js/messageQueue');
 
 const httpHandler = require('../js/httpHandler');
-
+httpHandler.initialize(messageQueue);
 
 
 describe('server responses', () => {
@@ -25,6 +26,8 @@ describe('server responses', () => {
     let {req, res} = server.mock('/', 'GET');
 
     let swimCommand = ['up', 'down', 'left', 'right'];
+    messageQueue.enqueue('down');
+    messageQueue.enqueue('up');
 
     httpHandler.router(req, res);
     expect(res._responseCode).to.equal(200);

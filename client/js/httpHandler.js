@@ -13,7 +13,7 @@
       contentType: false,
       processData: false,
       success: (data) => {
-        console.log(data);
+        // console.log(data);
         SwimTeam.move(data);
       },
       error: (err) => {

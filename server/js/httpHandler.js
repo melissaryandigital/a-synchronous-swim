@@ -16,14 +16,12 @@ module.exports.initialize = (queue) => {
 };
 
 module.exports.router = (req, res, next = ()=>{}) => {
-  console.log('Serving request type ' + req.method + ' for url ' + req.url);
+  // console.log('Serving request type ' + req.method + ' for url ' + req.url);
 
   if (req.method === 'GET') {
     res.writeHead(200, headers);
-    // Create random swim move
 
-    var randomMove = Swim.random();
-    res.write(randomMove, 'utf-8');
+    res.write(messageQueue.dequeue() || 'up', 'utf-8');
     res.end();
     next();
   }
