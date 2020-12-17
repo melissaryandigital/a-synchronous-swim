@@ -9,9 +9,9 @@
     $.ajax({
       type: 'GET',
       url: serverUrl,
-      cache: false,
-      contentType: false,
-      processData: false,
+      // cache: false,
+      // contentType: false,
+      // processData: false,
       success: (data) => {
         // console.log(data);
         SwimTeam.move(data);

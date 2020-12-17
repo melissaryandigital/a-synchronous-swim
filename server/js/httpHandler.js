@@ -1,5 +1,5 @@
 const fs = require('fs');
-const url  = require('url');
+// const url  = require('url');
 const path = require('path');
 const headers = require('./cors');
 const multipart = require('./multipartUtils');
@@ -16,64 +16,70 @@ module.exports.initialize = (queue) => {
   messageQueue = queue;
 };
 
-module.exports.router = (req, res, next = ()=>{}) => {
+module.exports.router = (req, res, next = () => { }) => {
   // console.log('Serving request type ' + req.method + ' for url ' + req.url);
 
-  // Find the requested path name
-  var url_parts = url.parse(req.url);
-  var pathName = url_parts.pathname;
-  // 'spec/missing.jpg'
-  console.log(pathName);
-  switch (pathName) {
-    case '/background.jpg':
-      if (req.method === 'GET') {
-        // read image from disk
-        fs.readFile(path.join('.', pathName), 'utf8', (err, data) => {
-          if (err) {
-            // if it doesn't exist return 404 status code
-            res.writeHead(404, headers);
-            return;
-          }
+  // res.setHeader('Access-Control-Allow-Origin', '*');
+	// res.setHeader('Access-Control-Request-Method', '*');
+	// res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
+	// res.setHeader('Access-Control-Allow-Headers', '*');
 
-          res.writeHead(200, headers);
-          // return image and 200 status code
-          res.write(data, 'utf8');
-          res.end();
-          next();
-        });
+  // GET
+  if (req.method === 'GET') {
+    var mypath = path.join('.', req.url);
+    console.log(path.extname(mypath));
+    // Check file extension for images
+    if (path.extname(mypath) === '.jpg') {
+      // console.log(mypath);
+      const filePath = path.join(__dirname, mypath);
+      const readStream = fs.createReadStream(filePath);
+      let stat = {};
+      try {
+        stat = fs.statSync(filePath);
 
-        // res.writeHead(200, headers);
-        // res.end();
-        // next();
-        return;
-      }
+        res.writeHead(200, {
+          'Content-Type': 'image/jpeg',
+          'Content-Length': stat.size
+        })
 
-    case '/spec/missing.jpg':
-      res.writeHead(404, headers);
-      res.end();
-      next();
-    case '/':
-      if (req.method === 'OPTIONS') {
-        res.writeHead(200, headers);
+        readStream.pipe(res);
+
+        res.end();
+        next();
+
+      } catch (err) {
+        res.writeHead(404, headers);
+        // res.write(err, 'utf8');
+        // console.log(err);
         res.end();
         next();
         return;
       }
 
-      if (req.method === 'GET') {
-        res.writeHead(200, headers);
-
-        res.write(messageQueue.dequeue() || 'up', 'utf-8');
+      readStream.on('error', (err) => {
+        res.writeHead(404, headers);
+        // res.write(err, 'utf8');
+        console.log(err);
         res.end();
         next();
-        return;
-      }
-    default:
-      // 404
-      res.writeHead(404, headers);
+      });
+
+
+    } else {
+      res.writeHead(200, headers);
+      res.write(messageQueue.dequeue() || 'up', 'utf-8');
       res.end();
       next();
-  }
+      return;
+    }
+  };
+  // OPTIONS
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200, headers);
+    res.end();
+    next();
+    return;
+  };
 };
 
 
