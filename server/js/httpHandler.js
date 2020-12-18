@@ -17,7 +17,37 @@ module.exports.initialize = (queue) => {
 };
 
 module.exports.router = (req, res, next = () => { }) => {
-  console.log('Serving request type ' + req.method + ' for url ' + req.url);
+  // console.log('Serving request type ' + req.method + ' for url ' + req.url);
+  // POST
+  if (req.method === 'POST') {
+    //let backgroundImage = '';
+
+    const buff = Buffer.alloc(1024);
+
+    req.on('data', (chunk) => {
+      //backgroundImage += chunk;
+      buff.write(chunk.toString());
+    });
+
+    req.on('end', () => {
+      res.writeHead(201, headers);
+      // console.log('POSTED')
+      // console.log(`\t${backgroundImage}`);
+      fs.writeFile(module.exports.backgroundImageFile, buff.toString(), (err) => {
+        res.end();
+        if (!err) {
+          console.log('wrote file to disk!');
+          return;
+        }
+
+        console.log(`ERROR: ${err}`);
+      })
+      next();
+    });
+
+    return;
+  }
+
   // GET
   if (req.method === 'GET') {
     var mypath = path.join('.', req.url);
