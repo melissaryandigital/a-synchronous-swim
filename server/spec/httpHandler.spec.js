@@ -48,7 +48,7 @@ describe('server responses', () => {
   });
 
   it('should respond with 200 to a GET request for a present background image', (done) => {
-    httpHandler.backgroundImageFile = path.join('.', 'background.jpg');
+    httpHandler.backgroundImageFile = path.join('.', 'js', 'background.jpg');
     // httpHandler.backgroundImageFile = path.join('.', 'spec', 'water-lg.jpg');
     let {req, res} = server.mock(httpHandler.backgroundImageFile, 'GET');
 

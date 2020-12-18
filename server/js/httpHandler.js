@@ -17,62 +17,43 @@ module.exports.initialize = (queue) => {
 };
 
 module.exports.router = (req, res, next = () => { }) => {
-  // console.log('Serving request type ' + req.method + ' for url ' + req.url);
-
-  // res.setHeader('Access-Control-Allow-Origin', '*');
-	// res.setHeader('Access-Control-Request-Method', '*');
-	// res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
-	// res.setHeader('Access-Control-Allow-Headers', '*');
-
+  console.log('Serving request type ' + req.method + ' for url ' + req.url);
   // GET
   if (req.method === 'GET') {
     var mypath = path.join('.', req.url);
-    console.log(path.extname(mypath));
-    // Check file extension for images
+
     if (path.extname(mypath) === '.jpg') {
-      // console.log(mypath);
-      const filePath = path.join(__dirname, mypath);
-      const readStream = fs.createReadStream(filePath);
-      let stat = {};
-      try {
-        stat = fs.statSync(filePath);
 
-        res.writeHead(200, {
-          'Content-Type': 'image/jpeg',
-          'Content-Length': stat.size
-        })
+      var readStream = fs.createReadStream(mypath);
 
+      readStream.on('open', function () {
+        var stat = fs.statSync(mypath);
+        res.writeHead(200,
+          { 'Content-Type': 'image/jpeg',
+           'Content-Length': stat.size
+          });
         readStream.pipe(res);
-
+      }).on('close', function () {
         res.end();
         next();
+      })
 
-      } catch (err) {
+      readStream.on('error', function () {
         res.writeHead(404, headers);
-        // res.write(err, 'utf8');
-        // console.log(err);
         res.end();
         next();
-        return;
-      }
+      })
 
-      readStream.on('error', (err) => {
-        res.writeHead(404, headers);
-        // res.write(err, 'utf8');
-        console.log(err);
-        res.end();
-        next();
-      });
-
-
+      // GET request for key directions
     } else {
       res.writeHead(200, headers);
       res.write(messageQueue.dequeue() || 'up', 'utf-8');
       res.end();
       next();
       return;
-    }
+    };
   };
+
   // OPTIONS
   if (req.method === 'OPTIONS') {
     res.writeHead(200, headers);
