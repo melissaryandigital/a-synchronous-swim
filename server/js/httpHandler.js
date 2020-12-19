@@ -1,5 +1,4 @@
 const fs = require('fs');
-// const url  = require('url');
 const path = require('path');
 const headers = require('./cors');
 const multipart = require('./multipartUtils');
@@ -20,29 +19,37 @@ module.exports.router = (req, res, next = () => { }) => {
   // console.log('Serving request type ' + req.method + ' for url ' + req.url);
   // POST
   if (req.method === 'POST') {
-    //let backgroundImage = '';
+    const backgroundPath = module.exports.backgroundImageFile;
 
-    const buff = Buffer.alloc(1024);
+    let data = [];
 
     req.on('data', (chunk) => {
-      //backgroundImage += chunk;
-      buff.write(chunk.toString());
+      data.push(chunk);
     });
 
     req.on('end', () => {
       res.writeHead(201, headers);
-      // console.log('POSTED')
-      // console.log(`\t${backgroundImage}`);
-      fs.writeFile(module.exports.backgroundImageFile, buff.toString(), (err) => {
+
+      // data is type Buffer
+      data = Buffer.concat(data);
+      // console.log(`Buffer length: ${data.length}`);
+
+      let parsedFile = multipart.getFile(data);
+
+      // console.log(`Parsed File: ${parsedFile}`);
+
+      fs.writeFile(backgroundPath, parsedFile.data, { encoding: 'binary' }, (err) => {
         res.end();
-        if (!err) {
-          console.log('wrote file to disk!');
+        next();
+
+        if (err) {
+          console.log(`ERROR writing file: ${err}`);
           return;
         }
 
-        console.log(`ERROR: ${err}`);
-      })
-      next();
+        console.log(`saved image with size ${data.length} to "${backgroundPath}"`);
+      });
+
     });
 
     return;
@@ -53,7 +60,7 @@ module.exports.router = (req, res, next = () => { }) => {
     var mypath = path.join('.', req.url);
 
     if (path.extname(mypath) === '.jpg') {
-
+      console.log(mypath);
       var readStream = fs.createReadStream(mypath);
 
       readStream.on('open', function () {
